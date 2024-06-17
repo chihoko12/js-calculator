@@ -37,13 +37,23 @@ class Calculator extends Component {
   }
 
   handleEvaluate() {
-    if (this.state.currentVal.includes('Limit')) return;
+//    if (this.state.currentVal.includes('Limit')) return;
+    if (this.state.currentVal.includes('Limit') || this.state.evaluated || this.state.currentVal === 'NaN') return;
 
     let expression = this.state.formula;
     expression = this.removeTrailingOperators(expression);
     expression = this.replaceOperators(expression);
 
-    // filtering the expression to remove consecutive operators
+    // Ensure the expression is valid before evaluation
+    if (!this.isValidExpression(expression)) {
+      this.setState({
+        currentVal: 'NaN',
+        formula: '',
+        evaluated: true
+      });
+      return;
+    }
+
     let answer = this.calculateExpression(expression);
     this.setState({
       currentVal: answer.toString(),
@@ -61,9 +71,17 @@ class Calculator extends Component {
   }
 
   replaceOperators(expression) {
-    //return expression.replace(/x/g, "*").replace(/-/g, "-").replace("--", "-");
     return expression.replace(/x/g, "*").replace("--", "-");
-    //return expression.replace(/x/g,"*").replace(/--/,"+");
+  }
+
+  isValidExpression(expression) {
+    try {
+      // This will throw if the expression is invalid
+      eval(expression);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   calculateExpression(expression) {
@@ -123,8 +141,6 @@ class Calculator extends Component {
       this.maxDigitWarning();
       return;
     }
-
-    this.setState({ evaluated: false });
 
     if (evaluated) {
       this.setState({
