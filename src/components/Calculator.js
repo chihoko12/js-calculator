@@ -31,7 +31,9 @@ class Calculator extends Component {
       currentVal: 'Digit Limit Met',
       prevVal: this.state.currentVal,
     });
-    setTimeout(() => this.setState({ currentVal: this.state.prevVal }), 1000);
+    setTimeout(() => this.setState({
+      currentVal: this.state.prevVal
+    }), 1000);
   }
 
   handleEvaluate() {
@@ -41,7 +43,8 @@ class Calculator extends Component {
     expression = this.removeTrailingOperators(expression);
     expression = this.replaceOperators(expression);
 
-    const answer = this.calculateExpression(expression);
+    // filtering the expression to remove consecutive operators
+    let answer = this.calculateExpression(expression);
     this.setState({
       currentVal: answer.toString(),
       formula: this.formatFormula(expression,answer),
@@ -58,7 +61,9 @@ class Calculator extends Component {
   }
 
   replaceOperators(expression) {
-    return expression.replace(/x/g, "*").replace(/-/g, "-").replace("--", "-");
+    //return expression.replace(/x/g, "*").replace(/-/g, "-").replace("--", "-");
+    return expression.replace(/x/g, "*").replace("--", "-");
+    //return expression.replace(/x/g,"*").replace(/--/,"+");
   }
 
   calculateExpression(expression) {
@@ -66,7 +71,7 @@ class Calculator extends Component {
   }
 
   formatFormula(expression,answer) {
-    return expression.replace(/\*/g, "⋅").replace(/-/g, "-").replace(/(x|\/|\+)-/, "$1-").replace(/^-/, "-") + "=" + answer;
+    return expression.replace(/\*/g, "⋅").replace(/(x|\/|\+)-/, "$1-").replace(/^-/, "-") + "=" + answer;
   }
 
   handleOperators(e) {
@@ -84,23 +89,26 @@ class Calculator extends Component {
       this.setState({
         formula: prevVal + operator
       });
+    } else if (endsWithOperator.test(formula)) {
+        this.handleEndsWithOperator(formula, prevVal,operator);
     } else {
-      let updatedFormula = formula;
-
-      if (endsWithOperator.test(formula)) {
-        if (endsWithNegativeSign.test(formula)) {
-          if (operator !== "-") {
-            updatedFormula = prevVal;
-          }
-        } else {
-          updatedFormula = formula.slice(0, -1);
-        }
-      }
-
       this.setState({
-        prevVal: updatedFormula,
-        formula: updatedFormula + operator
+        prevVal: formula,
+        formula: formula + operator
       });
+    }
+  }
+
+  handleEndsWithOperator(formula,prevVal,operator) {
+    if (endsWithNegativeSign.test(formula)) {
+      if (operator !== "-") {
+        this.setState({
+          formula: prevVal + operator
+        });
+      }
+    } else {
+        const newFormula = endsWithNegativeSign.test(formula + operator) ? formula : prevVal;
+        this.setState({ formula: newFormula + operator });
     }
   }
 
